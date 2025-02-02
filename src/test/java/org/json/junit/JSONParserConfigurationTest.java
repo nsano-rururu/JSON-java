@@ -4,6 +4,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONParserConfiguration;
+import org.json.JSONTokener;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -14,7 +15,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class JSONParserConfigurationTest {
     private static final String TEST_SOURCE = "{\"key\": \"value1\", \"key\": \"value2\"}";
@@ -30,6 +34,24 @@ public class JSONParserConfigurationTest {
                 new JSONParserConfiguration().withOverwriteDuplicateKey(true));
 
         assertEquals("duplicate key should be overwritten", "value2", jsonObject.getString("key"));
+    }
+
+    @Test
+    public void strictModeIsCloned(){
+        JSONParserConfiguration jsonParserConfiguration = new JSONParserConfiguration()
+                .withStrictMode(true)
+                .withMaxNestingDepth(12);
+
+        assertTrue(jsonParserConfiguration.isStrictMode());
+    }
+
+    @Test
+    public void maxNestingDepthIsCloned(){
+        JSONParserConfiguration jsonParserConfiguration = new JSONParserConfiguration()
+                .<JSONParserConfiguration>withKeepStrings(true)
+                .withStrictMode(true);
+
+        assertTrue(jsonParserConfiguration.isKeepStrings());
     }
 
     @Test
@@ -488,6 +510,40 @@ public class JSONParserConfigurationTest {
 
         assertEquals("Strict mode error: Value 'test' is not surrounded by quotes at 5 [character 6 line 1]",
                 je.getMessage());
+    }
+
+    @Test
+    public void givenInvalidInputObject_testStrictModeTrue_JSONObjectUsingJSONTokener_shouldThrowJSONException() {
+        JSONException exception = assertThrows(JSONException.class, () -> {
+            new JSONObject(new JSONTokener("{\"key\":\"value\"} invalid trailing text"), new JSONParserConfiguration().withStrictMode(true));
+        });
+
+        assertEquals("Strict mode error: Unparsed characters found at end of input text at 17 [character 18 line 1]", exception.getMessage());
+    }
+
+    @Test
+    public void givenInvalidInputObject_testStrictModeTrue_JSONObjectUsingString_shouldThrowJSONException() {
+        JSONException exception = assertThrows(JSONException.class, () -> {
+            new JSONObject("{\"key\":\"value\"} invalid trailing text", new JSONParserConfiguration().withStrictMode(true));
+        });
+        assertEquals("Strict mode error: Unparsed characters found at end of input text at 17 [character 18 line 1]", exception.getMessage());
+    }
+
+    @Test
+    public void givenInvalidInputObject_testStrictModeTrue_JSONArrayUsingJSONTokener_shouldThrowJSONException() {
+        JSONException exception = assertThrows(JSONException.class, () -> {
+            new JSONArray(new JSONTokener("[\"value\"] invalid trailing text"), new JSONParserConfiguration().withStrictMode(true));
+        });
+
+        assertEquals("Strict mode error: Unparsed characters found at end of input text at 11 [character 12 line 1]", exception.getMessage());
+    }
+
+    @Test
+    public void givenInvalidInputObject_testStrictModeTrue_JSONArrayUsingString_shouldThrowJSONException() {
+        JSONException exception = assertThrows(JSONException.class, () -> {
+            new JSONArray("[\"value\"] invalid trailing text", new JSONParserConfiguration().withStrictMode(true));
+        });
+        assertEquals("Strict mode error: Unparsed characters found at end of input text at 11 [character 12 line 1]", exception.getMessage());
     }
 
     /**

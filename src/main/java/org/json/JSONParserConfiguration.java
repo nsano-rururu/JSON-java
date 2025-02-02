@@ -27,7 +27,9 @@ public class JSONParserConfiguration extends ParserConfiguration {
     protected JSONParserConfiguration clone() {
         JSONParserConfiguration clone = new JSONParserConfiguration();
         clone.overwriteDuplicateKey = overwriteDuplicateKey;
+        clone.strictMode = strictMode;
         clone.maxNestingDepth = maxNestingDepth;
+        clone.keepStrings = keepStrings;
         return clone;
     }
 
@@ -104,6 +106,9 @@ public class JSONParserConfiguration extends ParserConfiguration {
     }
 
     /**
+     * The parser throws an Exception when strict mode is true and tries to parse invalid JSON characters.
+     * Otherwise, the parser is more relaxed and might tolerate some invalid characters.
+     *
      * @return the current strict mode setting.
      */
     public boolean isStrictMode() {
