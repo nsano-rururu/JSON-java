@@ -330,7 +330,7 @@ public class XML {
         } else {
             tagName = (String) token;
             token = null;
-            jsonObject = new JSONObject();
+            jsonObject = new JSONObject(config.isUseLinkedHashMap());
             boolean nilAttributeFound = false;
             xmlXsiTypeConverter = null;
             for (;;) {
@@ -772,7 +772,7 @@ public class XML {
      * @throws JSONException Thrown if there is an errors while parsing the string
      */
     public static JSONObject toJSONObject(Reader reader, XMLParserConfiguration config) throws JSONException {
-        JSONObject jo = new JSONObject();
+        JSONObject jo = new JSONObject(config.isUseLinkedHashMap());
         XMLTokener x = new XMLTokener(reader, config);
         while (x.more()) {
             x.skipPast("<");
