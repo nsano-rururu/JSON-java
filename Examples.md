@@ -272,6 +272,34 @@ private static void XMLFromExampleConversion() {
 	System.out.println("Final JSONObject: " + output);
 }
 ```
+```java
+private static void XMLWithOrderPreservation() {
+
+	//By default, XML to JSON conversion uses HashMap which does not preserve element order
+	//To preserve the order of XML elements, use LinkedHashMap option
+
+	String xmlString = 
+	    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+	    "<root>\n"+
+	    "    <alpha>1</alpha>\n"+
+	    "    <beta>2</beta>\n"+
+	    "    <gamma>3</gamma>\n"+
+	    "</root>";
+
+	//Default conversion (order not preserved)
+	JSONObject jsonDefault = XML.toJSONObject(xmlString);
+	System.out.println("Default (HashMap): " + jsonDefault.toString());
+
+	//Conversion with order preservation using LinkedHashMap
+	XMLParserConfiguration config = XMLParserConfiguration.ORIGINAL.withUseLinkedHashMap(true);
+	JSONObject jsonOrdered = XML.toJSONObject(xmlString, config);
+	System.out.println("With LinkedHashMap: " + jsonOrdered.toString());
+
+	//Converting back to XML will also preserve order
+	String xmlFromJson = XML.toString(jsonOrdered);
+	System.out.println("Back to XML: " + xmlFromJson);
+}
+```
 <h3>Cookie Conversions</h3>
 
 ```java
