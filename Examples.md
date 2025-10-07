@@ -300,6 +300,34 @@ private static void XMLWithOrderPreservation() {
 	System.out.println("Back to XML: " + xmlFromJson);
 }
 ```
+```java
+private static void JSONMLWithOrderPreservation() {
+
+	//JSONML also supports order preservation with LinkedHashMap
+	//By default, JSONML uses HashMap which does not preserve element order
+
+	String xmlString = 
+	    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+	    "<root>\n"+
+	    "    <alpha>1</alpha>\n"+
+	    "    <beta>2</beta>\n"+
+	    "    <gamma>3</gamma>\n"+
+	    "</root>";
+
+	//Default JSONML conversion (order not preserved)
+	JSONObject jsonmlDefault = JSONML.toJSONObject(xmlString);
+	System.out.println("Default JSONML (HashMap): " + jsonmlDefault.toString());
+
+	//JSONML conversion with order preservation using LinkedHashMap
+	JSONMLParserConfiguration config = JSONMLParserConfiguration.ORIGINAL.withUseLinkedHashMap(true);
+	JSONObject jsonmlOrdered = JSONML.toJSONObject(xmlString, config);
+	System.out.println("JSONML with LinkedHashMap: " + jsonmlOrdered.toString());
+
+	//Converting back to XML will also preserve order
+	String xmlFromJsonml = JSONML.toString(jsonmlOrdered);
+	System.out.println("Back to XML: " + xmlFromJsonml);
+}
+```
 <h3>Cookie Conversions</h3>
 
 ```java
