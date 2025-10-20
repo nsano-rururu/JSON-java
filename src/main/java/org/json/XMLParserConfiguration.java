@@ -81,6 +81,13 @@ public class XMLParserConfiguration extends ParserConfiguration {
     private boolean shouldTrimWhiteSpace;
 
     /**
+     * Flag to indicate whether LinkedHashMap should be used to preserve order when parsing XML.
+     * The default behaviour is to use HashMap which does not preserve insertion order.
+     * When this is set to true, LinkedHashMap will be used to preserve the order of elements.
+     */
+    private boolean useLinkedHashMap;
+
+    /**
      * Default parser configuration. Does not keep strings (tries to implicitly convert
      * values), and the CDATA Tag Name is "content". Trims whitespace.
      */
@@ -91,6 +98,7 @@ public class XMLParserConfiguration extends ParserConfiguration {
         this.xsiTypeMap = Collections.emptyMap();
         this.forceList = Collections.emptySet();
         this.shouldTrimWhiteSpace = true;
+        this.useLinkedHashMap = false;
     }
 
     /**
@@ -175,7 +183,8 @@ public class XMLParserConfiguration extends ParserConfiguration {
      */
     private XMLParserConfiguration (final boolean keepStrings, final String cDataTagName,
             final boolean convertNilAttributeToNull, final Map<String, XMLXsiTypeConverter<?>> xsiTypeMap, final Set<String> forceList,
-            final int maxNestingDepth, final boolean closeEmptyTag, final boolean keepNumberAsString, final boolean keepBooleanAsString) {
+            final int maxNestingDepth, final boolean closeEmptyTag, final boolean keepNumberAsString, final boolean keepBooleanAsString,
+            final boolean useLinkedHashMap) {
         super(false, maxNestingDepth);
         this.keepNumberAsString = keepNumberAsString;
         this.keepBooleanAsString = keepBooleanAsString;
@@ -184,6 +193,7 @@ public class XMLParserConfiguration extends ParserConfiguration {
         this.xsiTypeMap = Collections.unmodifiableMap(xsiTypeMap);
         this.forceList = Collections.unmodifiableSet(forceList);
         this.closeEmptyTag = closeEmptyTag;
+        this.useLinkedHashMap = useLinkedHashMap;
     }
 
     /**
@@ -205,7 +215,8 @@ public class XMLParserConfiguration extends ParserConfiguration {
                 this.maxNestingDepth,
                 this.closeEmptyTag,
                 this.keepNumberAsString,
-                this.keepBooleanAsString
+                this.keepBooleanAsString,
+                this.useLinkedHashMap
         );
         config.shouldTrimWhiteSpace = this.shouldTrimWhiteSpace;
         return config;
@@ -440,5 +451,30 @@ public class XMLParserConfiguration extends ParserConfiguration {
      */
     public boolean shouldTrimWhiteSpace() {
         return this.shouldTrimWhiteSpace;
+    }
+
+    /**
+     * When parsing the XML into JSON, specifies if LinkedHashMap should be used to preserve element order.
+     * By default, HashMap is used which does not preserve order.
+     *
+     * @return The <code>useLinkedHashMap</code> configuration value.
+     */
+    public boolean isUseLinkedHashMap() {
+        return this.useLinkedHashMap;
+    }
+
+    /**
+     * When parsing the XML into JSON, specifies if LinkedHashMap should be used to preserve element order.
+     * By default, HashMap is used which does not preserve order.
+     *
+     * @param useLinkedHashMap
+     *      new value to use for the <code>useLinkedHashMap</code> configuration option.
+     *
+     * @return The existing configuration will not be modified. A new configuration is returned.
+     */
+    public XMLParserConfiguration withUseLinkedHashMap(final boolean useLinkedHashMap) {
+        XMLParserConfiguration newConfig = this.clone();
+        newConfig.useLinkedHashMap = useLinkedHashMap;
+        return newConfig;
     }
 }

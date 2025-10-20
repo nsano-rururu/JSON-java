@@ -1245,4 +1245,66 @@ public class XMLConfigurationTest {
             assertTrue("Error: " +e.getMessage(), false);
         }
     }
+
+    /**
+     * Test that XML to JSON conversion preserves order when using LinkedHashMap.
+     */
+    @Test
+    public void shouldPreserveOrderWithLinkedHashMap() {
+        String xmlStr = 
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+            "<root>\n"+
+            "    <alpha>1</alpha>\n"+
+            "    <beta>2</beta>\n"+
+            "    <gamma>3</gamma>\n"+
+            "    <delta>4</delta>\n"+
+            "    <epsilon>5</epsilon>\n"+
+            "</root>";
+        
+        // Convert with LinkedHashMap
+        XMLParserConfiguration config = XMLParserConfiguration.ORIGINAL.withUseLinkedHashMap(true);
+        JSONObject jsonObject = XML.toJSONObject(xmlStr, config);
+        
+        // Verify the underlying map is a LinkedHashMap
+        assertTrue("Should use LinkedHashMap", 
+                jsonObject.getMapType().getName().contains("LinkedHashMap"));
+        
+        // Get the root object
+        JSONObject root = jsonObject.getJSONObject("root");
+        assertTrue("Root should use LinkedHashMap", 
+                root.getMapType().getName().contains("LinkedHashMap"));
+        
+        // Verify order is preserved by checking the keys
+        String[] keys = root.keySet().toArray(new String[0]);
+        assertEquals("First key should be alpha", "alpha", keys[0]);
+        assertEquals("Second key should be beta", "beta", keys[1]);
+        assertEquals("Third key should be gamma", "gamma", keys[2]);
+        assertEquals("Fourth key should be delta", "delta", keys[3]);
+        assertEquals("Fifth key should be epsilon", "epsilon", keys[4]);
+    }
+
+    /**
+     * Test that XML to JSON conversion does not preserve order by default (using HashMap).
+     */
+    @Test
+    public void shouldNotPreserveOrderByDefault() {
+        String xmlStr = 
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+            "<root>\n"+
+            "    <alpha>1</alpha>\n"+
+            "    <beta>2</beta>\n"+
+            "</root>";
+        
+        // Convert with default configuration (HashMap)
+        JSONObject jsonObject = XML.toJSONObject(xmlStr, XMLParserConfiguration.ORIGINAL);
+        
+        // Verify the underlying map is a HashMap (not LinkedHashMap)
+        assertFalse("Should not use LinkedHashMap by default", 
+                jsonObject.getMapType().getName().contains("LinkedHashMap"));
+        
+        // Get the root object
+        JSONObject root = jsonObject.getJSONObject("root");
+        assertFalse("Root should not use LinkedHashMap by default", 
+                root.getMapType().getName().contains("LinkedHashMap"));
+    }
 }
