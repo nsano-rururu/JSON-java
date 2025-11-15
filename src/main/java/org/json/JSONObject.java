@@ -160,13 +160,28 @@ public class JSONObject {
      * Construct an empty JSONObject.
      */
     public JSONObject() {
+        this(false);
+    }
+
+    /**
+     * Construct an empty JSONObject with option to use LinkedHashMap for preserving order.
+     * Package-private constructor for internal use.
+     *
+     * @param useLinkedHashMap If true, uses LinkedHashMap to preserve insertion order; otherwise uses HashMap
+     */
+    JSONObject(boolean useLinkedHashMap) {
         // HashMap is used on purpose to ensure that elements are unordered by
         // the specification.
         // JSON tends to be a portable transfer format to allows the container
         // implementations to rearrange their items for a faster element
         // retrieval based on associative access.
         // Therefore, an implementation mustn't rely on the order of the item.
-        this.map = new HashMap<String, Object>();
+        // However, LinkedHashMap can be used when order preservation is needed.
+        if (useLinkedHashMap) {
+            this.map = new LinkedHashMap<String, Object>();
+        } else {
+            this.map = new HashMap<String, Object>();
+        }
     }
 
     /**
