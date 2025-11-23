@@ -986,4 +986,62 @@ public class JSONMLTest {
         }
     }
 
+    /**
+     * Test that JSONML XML to JSON conversion preserves order when using LinkedHashMap.
+     */
+    @Test
+    public void shouldPreserveOrderWithLinkedHashMap() {
+        String xmlStr = 
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+            "<root>\n"+
+            "    <alpha>1</alpha>\n"+
+            "    <beta>2</beta>\n"+
+            "    <gamma>3</gamma>\n"+
+            "    <delta>4</delta>\n"+
+            "    <epsilon>5</epsilon>\n"+
+            "</root>";
+        
+        // Convert with LinkedHashMap
+        JSONMLParserConfiguration config = JSONMLParserConfiguration.ORIGINAL.withUseLinkedHashMap(true);
+        JSONObject jsonObject = JSONML.toJSONObject(xmlStr, config);
+        
+        // Verify the underlying map is a LinkedHashMap
+        assertTrue("Should use LinkedHashMap", 
+                jsonObject.getMapType().getName().contains("LinkedHashMap"));
+        
+        // Verify order is preserved by checking the keys
+        String[] keys = jsonObject.keySet().toArray(new String[0]);
+        assertEquals("First key should be tagName", "tagName", keys[0]);
+        assertEquals("Second key should be childNodes", "childNodes", keys[1]);
+        
+        // Check the child nodes array
+        JSONArray childNodes = jsonObject.getJSONArray("childNodes");
+        assertTrue("Should have child nodes", childNodes.length() > 0);
+        
+        // Check first child (should be an object with attributes in order)
+        JSONObject firstChild = childNodes.getJSONObject(0);
+        String[] childKeys = firstChild.keySet().toArray(new String[0]);
+        assertEquals("First child key should be tagName", "tagName", childKeys[0]);
+    }
+
+    /**
+     * Test that JSONML XML to JSON conversion does not preserve order by default (using HashMap).
+     */
+    @Test
+    public void shouldNotPreserveOrderByDefault() {
+        String xmlStr = 
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+            "<root>\n"+
+            "    <alpha>1</alpha>\n"+
+            "    <beta>2</beta>\n"+
+            "</root>";
+        
+        // Convert with default configuration (HashMap)
+        JSONObject jsonObject = JSONML.toJSONObject(xmlStr, JSONMLParserConfiguration.ORIGINAL);
+        
+        // Verify the underlying map is a HashMap (not LinkedHashMap)
+        assertFalse("Should not use LinkedHashMap by default", 
+                jsonObject.getMapType().getName().contains("LinkedHashMap"));
+    }
+
 }
