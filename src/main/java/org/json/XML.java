@@ -391,7 +391,7 @@ public class XML {
                             context.append(tagName, JSONObject.NULL);
                         } else if (jsonObject.length() > 0) {
                             context.append(tagName, jsonObject);
-                        } else {
+                        } else if(context.isEmpty() && (context.opt(tagName) == null || !(context.get(tagName) instanceof JSONArray))) { //avoids resetting the array in case of an empty tag in the middle or end
                             context.put(tagName, new JSONArray());
                         }
                     } else {
@@ -451,7 +451,10 @@ public class XML {
                                 if (config.getForceList().contains(tagName)) {
                                     // Force the value to be an array
                                     if (jsonObject.length() == 0) {
-                                        context.put(tagName, new JSONArray());
+                                        //avoids resetting the array in case of an empty element in the middle or end
+                                        if(context.length()==0 && context.opt(tagName) == null || !(context.get(tagName) instanceof JSONArray)) {
+                                            context.put(tagName, new JSONArray());
+                                        }
                                     } else if (jsonObject.length() == 1
                                             && jsonObject.opt(config.getcDataTagName()) != null) {
                                         context.append(tagName, jsonObject.opt(config.getcDataTagName()));
