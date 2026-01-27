@@ -151,9 +151,10 @@ public class XMLTokener extends JSONTokener {
     /**
      * Unescape an XML entity encoding;
      * @param e entity (only the actual entity value, not the preceding & or ending ;
-     * @return
+     * @return the unescaped entity string
+     * @throws JSONException if the entity is malformed
      */
-    static String unescapeEntity(String e) {
+    static String unescapeEntity(String e) throws JSONException {
         // validate
         if (e == null || e.isEmpty()) {
             return "";
@@ -161,21 +162,80 @@ public class XMLTokener extends JSONTokener {
         // if our entity is an encoded unicode point, parse it.
         if (e.charAt(0) == '#') {
             int cp;
+            // Check minimum length for numeric character reference
+            if (e.length() < 2) {
+                throw new JSONException("Invalid numeric character reference: &#;");
+            }
             if (e.charAt(1) == 'x' || e.charAt(1) == 'X') {
-                // hex encoded unicode
-                cp = Integer.parseInt(e.substring(2), 16);
+                // hex encoded unicode - need at least one hex digit after #x
+                if (e.length() < 3) {
+                    throw new JSONException("Invalid hex character reference: missing hex digits in &#" + e.substring(1) + ";");
+                }
+                String hex = e.substring(2);
+                if (!isValidHex(hex)) {
+                    throw new JSONException("Invalid hex character reference: &#" + e.substring(1) + ";");
+                }
+                try {
+                    cp = Integer.parseInt(hex, 16);
+                } catch (NumberFormatException nfe) {
+                    throw new JSONException("Invalid hex character reference: &#" + e.substring(1) + ";", nfe);
+                }
             } else {
                 // decimal encoded unicode
-                cp = Integer.parseInt(e.substring(1));
+                String decimal = e.substring(1);
+                if (!isValidDecimal(decimal)) {
+                    throw new JSONException("Invalid decimal character reference: &#" + decimal + ";");
+                }
+                try {
+                    cp = Integer.parseInt(decimal);
+                } catch (NumberFormatException nfe) {
+                    throw new JSONException("Invalid decimal character reference: &#" + decimal + ";", nfe);
+                }
             }
-            return new String(new int[] {cp},0,1);
-        } 
+            return new String(new int[] {cp}, 0, 1);
+        }
         Character knownEntity = entity.get(e);
-        if(knownEntity==null) {
+        if (knownEntity == null) {
             // we don't know the entity so keep it encoded
             return '&' + e + ';';
         }
         return knownEntity.toString();
+    }
+
+    /**
+     * Check if a string contains only valid hexadecimal digits.
+     * @param s the string to check
+     * @return true if s is non-empty and contains only hex digits (0-9, a-f, A-F)
+     */
+    private static boolean isValidHex(String s) {
+        if (s == null || s.isEmpty()) {
+            return false;
+        }
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Check if a string contains only valid decimal digits.
+     * @param s the string to check
+     * @return true if s is non-empty and contains only digits (0-9)
+     */
+    private static boolean isValidDecimal(String s) {
+        if (s == null || s.isEmpty()) {
+            return false;
+        }
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c < '0' || c > '9') {
+                return false;
+            }
+        }
+        return true;
     }
 
 
