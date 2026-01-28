@@ -986,4 +986,70 @@ public class JSONMLTest {
         }
     }
 
+    /**
+     * Tests that malformed XML causing type mismatch throws JSONException.
+     * Previously threw ClassCastException when parse() returned String instead of JSONArray.
+     * Related to issue #1034
+     */
+    @Test(expected = JSONException.class)
+    public void testMalformedXMLThrowsJSONExceptionNotClassCast() {
+        // This malformed XML causes parse() to return wrong type
+        byte[] data = {0x3c, 0x0a, 0x2f, (byte)0xff, (byte)0xff, (byte)0xff,
+                      (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff,
+                      (byte)0xff, 0x3e, 0x42};
+        String xmlStr = new String(data);
+        JSONML.toJSONArray(xmlStr);
+    }
+
+    /**
+     * Tests that type mismatch in toJSONObject throws JSONException.
+     * Validates safe type casting in toJSONObject methods.
+     */
+    @Test
+    public void testToJSONObjectTypeMismatch() {
+        // Create XML that would cause parse() to return wrong type
+        String xmlStr = "<\n/\u00ff\u00ff\u00ff\u00ff\u00ff\u00ff\u00ff\u00ff>B";
+        try {
+            JSONML.toJSONObject(xmlStr);
+            fail("Expected JSONException for type mismatch");
+        } catch (ClassCastException e) {
+            fail("Should throw JSONException, not ClassCastException");
+        } catch (JSONException e) {
+            // Expected - verify it's about type mismatch
+            assertTrue("Exception message should mention type error",
+                e.getMessage().contains("Expected") || e.getMessage().contains("got"));
+        }
+    }
+
+    /**
+     * Tests that valid XML still works correctly after the fix.
+     * Ensures the type checking doesn't break normal operation.
+     */
+    @Test
+    public void testValidXMLStillWorks() {
+        String xmlStr = "<root><item>value</item></root>";
+        try {
+            JSONArray jsonArray = JSONML.toJSONArray(xmlStr);
+            assertNotNull("JSONArray should not be null", jsonArray);
+            assertEquals("root", jsonArray.getString(0));
+        } catch (Exception e) {
+            fail("Valid XML should not throw exception: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Tests that valid XML to JSONObject still works correctly.
+     */
+    @Test
+    public void testValidXMLToJSONObjectStillWorks() {
+        String xmlStr = "<root attr=\"value\"><item>content</item></root>";
+        try {
+            JSONObject jsonObject = JSONML.toJSONObject(xmlStr);
+            assertNotNull("JSONObject should not be null", jsonObject);
+            assertEquals("root", jsonObject.getString("tagName"));
+        } catch (Exception e) {
+            fail("Valid XML should not throw exception: " + e.getMessage());
+        }
+    }
+
 }
