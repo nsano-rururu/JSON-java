@@ -161,37 +161,12 @@ public class XMLTokener extends JSONTokener {
         }
         // if our entity is an encoded unicode point, parse it.
         if (e.charAt(0) == '#') {
-            int cp;
-            // Check minimum length for numeric character reference
             if (e.length() < 2) {
                 throw new JSONException("Invalid numeric character reference: &#;");
             }
-            if (e.charAt(1) == 'x' || e.charAt(1) == 'X') {
-                // hex encoded unicode - need at least one hex digit after #x
-                if (e.length() < 3) {
-                    throw new JSONException("Invalid hex character reference: missing hex digits in &#" + e.substring(1) + ";");
-                }
-                String hex = e.substring(2);
-                if (!isValidHex(hex)) {
-                    throw new JSONException("Invalid hex character reference: &#" + e.substring(1) + ";");
-                }
-                try {
-                    cp = Integer.parseInt(hex, 16);
-                } catch (NumberFormatException nfe) {
-                    throw new JSONException("Invalid hex character reference: &#" + e.substring(1) + ";", nfe);
-                }
-            } else {
-                // decimal encoded unicode
-                String decimal = e.substring(1);
-                if (!isValidDecimal(decimal)) {
-                    throw new JSONException("Invalid decimal character reference: &#" + decimal + ";");
-                }
-                try {
-                    cp = Integer.parseInt(decimal);
-                } catch (NumberFormatException nfe) {
-                    throw new JSONException("Invalid decimal character reference: &#" + decimal + ";", nfe);
-                }
-            }
+            int cp = (e.charAt(1) == 'x' || e.charAt(1) == 'X')
+                ? parseHexEntity(e)
+                : parseDecimalEntity(e);
             return new String(new int[] {cp}, 0, 1);
         }
         Character knownEntity = entity.get(e);
@@ -200,6 +175,46 @@ public class XMLTokener extends JSONTokener {
             return '&' + e + ';';
         }
         return knownEntity.toString();
+    }
+
+    /**
+     * Parse a hexadecimal numeric character reference (e.g., "&#xABC;").
+     * @param e entity string starting with '#' (e.g., "#x1F4A9")
+     * @return the Unicode code point
+     * @throws JSONException if the format is invalid
+     */
+    private static int parseHexEntity(String e) throws JSONException {
+        // hex encoded unicode - need at least one hex digit after #x
+        if (e.length() < 3) {
+            throw new JSONException("Invalid hex character reference: missing hex digits in &#" + e.substring(1) + ";");
+        }
+        String hex = e.substring(2);
+        if (!isValidHex(hex)) {
+            throw new JSONException("Invalid hex character reference: &#" + e.substring(1) + ";");
+        }
+        try {
+            return Integer.parseInt(hex, 16);
+        } catch (NumberFormatException nfe) {
+            throw new JSONException("Invalid hex character reference: &#" + e.substring(1) + ";", nfe);
+        }
+    }
+
+    /**
+     * Parse a decimal numeric character reference (e.g., "&#123;").
+     * @param e entity string starting with '#' (e.g., "#123")
+     * @return the Unicode code point
+     * @throws JSONException if the format is invalid
+     */
+    private static int parseDecimalEntity(String e) throws JSONException {
+        String decimal = e.substring(1);
+        if (!isValidDecimal(decimal)) {
+            throw new JSONException("Invalid decimal character reference: &#" + decimal + ";");
+        }
+        try {
+            return Integer.parseInt(decimal);
+        } catch (NumberFormatException nfe) {
+            throw new JSONException("Invalid decimal character reference: &#" + decimal + ";", nfe);
+        }
     }
 
     /**
