@@ -1426,6 +1426,81 @@ public class XMLTest {
         assertEquals(jsonObject3.getJSONObject("color").getString("value"), "008E97");
     }
 
+    /**
+     * Tests that empty numeric character reference &#; throws JSONException.
+     * Previously threw StringIndexOutOfBoundsException.
+     * Related to issue #1035
+     */
+    @Test(expected = JSONException.class)
+    public void testEmptyNumericEntityThrowsJSONException() {
+        String xmlStr = "<a>&#;</a>";
+        XML.toJSONObject(xmlStr);
+    }
+
+    /**
+     * Tests that malformed decimal entity &#txx; throws JSONException.
+     * Previously threw NumberFormatException.
+     * Related to issue #1036
+     */
+    @Test(expected = JSONException.class)
+    public void testInvalidDecimalEntityThrowsJSONException() {
+        String xmlStr = "<a>&#txx;</a>";
+        XML.toJSONObject(xmlStr);
+    }
+
+    /**
+     * Tests that empty hex entity &#x; throws JSONException.
+     * Validates proper input validation for hex entities.
+     */
+    @Test(expected = JSONException.class)
+    public void testEmptyHexEntityThrowsJSONException() {
+        String xmlStr = "<a>&#x;</a>";
+        XML.toJSONObject(xmlStr);
+    }
+
+    /**
+     * Tests that invalid hex entity &#xGGG; throws JSONException.
+     * Validates hex digit validation.
+     */
+    @Test(expected = JSONException.class)
+    public void testInvalidHexEntityThrowsJSONException() {
+        String xmlStr = "<a>&#xGGG;</a>";
+        XML.toJSONObject(xmlStr);
+    }
+
+    /**
+     * Tests that valid decimal numeric entity &#65; works correctly.
+     * Should decode to character 'A'.
+     */
+    @Test
+    public void testValidDecimalEntity() {
+        String xmlStr = "<a>&#65;</a>";
+        JSONObject jsonObject = XML.toJSONObject(xmlStr);
+        assertEquals("A", jsonObject.getString("a"));
+    }
+
+    /**
+     * Tests that valid hex numeric entity &#x41; works correctly.
+     * Should decode to character 'A'.
+     */
+    @Test
+    public void testValidHexEntity() {
+        String xmlStr = "<a>&#x41;</a>";
+        JSONObject jsonObject = XML.toJSONObject(xmlStr);
+        assertEquals("A", jsonObject.getString("a"));
+    }
+
+    /**
+     * Tests that valid uppercase hex entity &#X41; works correctly.
+     * Should decode to character 'A'.
+     */
+    @Test
+    public void testValidUppercaseHexEntity() {
+        String xmlStr = "<a>&#X41;</a>";
+        JSONObject jsonObject = XML.toJSONObject(xmlStr);
+        assertEquals("A", jsonObject.getString("a"));
+    }
+
 }
 
 
