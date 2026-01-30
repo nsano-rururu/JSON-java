@@ -391,7 +391,7 @@ public class XML {
                             context.append(tagName, JSONObject.NULL);
                         } else if (jsonObject.length() > 0) {
                             context.append(tagName, jsonObject);
-                        } else if(context.isEmpty() && (context.opt(tagName) == null || !(context.get(tagName) instanceof JSONArray))) { //avoids resetting the array in case of an empty tag in the middle or end
+                        } else if(context.isEmpty()) { //avoids resetting the array in case of an empty tag in the middle or end
                             context.put(tagName, new JSONArray());
                         }
                     } else {
@@ -452,7 +452,7 @@ public class XML {
                                     // Force the value to be an array
                                     if (jsonObject.length() == 0) {
                                         //avoids resetting the array in case of an empty element in the middle or end
-                                        if(context.length()==0 && context.opt(tagName) == null || !(context.get(tagName) instanceof JSONArray)) {
+                                        if(context.isEmpty()) {
                                             context.put(tagName, new JSONArray());
                                         }
                                     } else if (jsonObject.length() == 1
