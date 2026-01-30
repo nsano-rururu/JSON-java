@@ -16,3 +16,6 @@ build
 /gradlew
 /gradlew.bat
 .gitmodules
+
+# ignore compiled class files
+*.class
