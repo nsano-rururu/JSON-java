@@ -1092,7 +1092,7 @@ public class XMLConfigurationTest {
                 "<addresses></addresses>";
 
         String expectedStr = 
-                "{\"addresses\":[]}";
+                "{\"addresses\":[\"\"]}";
         
         Set<String> forceList = new HashSet<String>();
         forceList.add("addresses");
@@ -1130,7 +1130,7 @@ public class XMLConfigurationTest {
                 "<addresses />";
 
         String expectedStr = 
-                "{\"addresses\":[]}";
+                "{\"addresses\":[\"\"]}";
         
         Set<String> forceList = new HashSet<String>();
         forceList.add("addresses");
@@ -1147,7 +1147,7 @@ public class XMLConfigurationTest {
     @Test
     public void testForceListWithLastElementAsEmptyTag(){
         final String originalXml = "<root><id>1</id><id/></root>";
-        final String expectedJsonString = "{\"root\":{\"id\":[1]}}";
+        final String expectedJsonString = "{\"root\":{\"id\":[1,\"\"]}}";
 
         HashSet<String> forceListCandidates = new HashSet<>();
         forceListCandidates.add("id");
@@ -1163,7 +1163,7 @@ public class XMLConfigurationTest {
     @Test
     public void testForceListWithFirstElementAsEmptyTag(){
         final String originalXml = "<root><id/><id>1</id></root>";
-        final String expectedJsonString = "{\"root\":{\"id\":[1]}}";
+        final String expectedJsonString = "{\"root\":{\"id\":[\"\",1]}}";
 
         HashSet<String> forceListCandidates = new HashSet<>();
         forceListCandidates.add("id");
@@ -1179,7 +1179,7 @@ public class XMLConfigurationTest {
     @Test
     public void testForceListWithMiddleElementAsEmptyTag(){
         final String originalXml = "<root><id>1</id><id/><id>2</id></root>";
-        final String expectedJsonString = "{\"root\":{\"id\":[1,2]}}";
+        final String expectedJsonString = "{\"root\":{\"id\":[1,\"\",2]}}";
 
         HashSet<String> forceListCandidates = new HashSet<>();
         forceListCandidates.add("id");
@@ -1195,8 +1195,7 @@ public class XMLConfigurationTest {
     @Test
     public void testForceListWithLastElementAsEmpty(){
         final String originalXml = "<root><id>1</id><id></id></root>";
-        final String expectedJsonString = "{\"root\":{\"id\":[1]}}";
-
+        final String expectedJsonString = "{\"root\":{\"id\":[1,\"\"]}}";
         HashSet<String> forceListCandidates = new HashSet<>();
         forceListCandidates.add("id");
         final JSONObject json = XML.toJSONObject(originalXml,
@@ -1210,7 +1209,7 @@ public class XMLConfigurationTest {
     @Test
     public void testForceListWithFirstElementAsEmpty(){
         final String originalXml = "<root><id></id><id>1</id></root>";
-        final String expectedJsonString = "{\"root\":{\"id\":[1]}}";
+        final String expectedJsonString = "{\"root\":{\"id\":[\"\",1]}}";
 
         HashSet<String> forceListCandidates = new HashSet<>();
         forceListCandidates.add("id");
@@ -1225,7 +1224,7 @@ public class XMLConfigurationTest {
     @Test
     public void testForceListWithMiddleElementAsEmpty(){
         final String originalXml = "<root><id>1</id><id></id><id>2</id></root>";
-        final String expectedJsonString = "{\"root\":{\"id\":[1,2]}}";
+        final String expectedJsonString = "{\"root\":{\"id\":[1,\"\",2]}}";
 
         HashSet<String> forceListCandidates = new HashSet<>();
         forceListCandidates.add("id");
@@ -1240,7 +1239,7 @@ public class XMLConfigurationTest {
     @Test
     public void testForceListEmptyAndEmptyTagsMixed(){
         final String originalXml = "<root><id></id><id/><id>1</id><id/><id></id><id>2</id></root>";
-        final String expectedJsonString = "{\"root\":{\"id\":[1,2]}}";
+        final String expectedJsonString = "{\"root\":{\"id\":[\"\",\"\",1,\"\",\"\",2]}}";
 
         HashSet<String> forceListCandidates = new HashSet<>();
         forceListCandidates.add("id");
@@ -1249,6 +1248,50 @@ public class XMLConfigurationTest {
                         .withKeepStrings(false)
                         .withForceList(forceListCandidates)
                         .withConvertNilAttributeToNull(true));
+        assertEquals(expectedJsonString, json.toString());
+    }
+
+    @Test
+    public void testForceListConsistencyWithDefault() {
+        final String originalXml = "<root><id>0</id><id>1</id><id/><id></id></root>";
+        final String expectedJsonString = "{\"root\":{\"id\":[0,1,\"\",\"\"]}}";
+
+        // confirm expected result of default array-of-tags processing
+        JSONObject json = XML.toJSONObject(originalXml);
+        assertEquals(expectedJsonString, json.toString());
+
+        // confirm forceList array-of-tags processing is consistent with default processing
+        HashSet<String> forceListCandidates = new HashSet<>();
+        forceListCandidates.add("id");
+        json = XML.toJSONObject(originalXml,
+                new XMLParserConfiguration()
+                        .withForceList(forceListCandidates));
+        assertEquals(expectedJsonString, json.toString());
+    }
+
+    @Test
+    public void testForceListInitializesAnArrayWithAnEmptyElement(){
+        final String originalXml = "<root><id></id></root>";
+        final String expectedJsonString = "{\"root\":{\"id\":[\"\"]}}";
+
+        HashSet<String> forceListCandidates = new HashSet<>();
+        forceListCandidates.add("id");
+        JSONObject json = XML.toJSONObject(originalXml,
+                new XMLParserConfiguration()
+                        .withForceList(forceListCandidates));
+        assertEquals(expectedJsonString, json.toString());
+    }
+
+    @Test
+    public void testForceListInitializesAnArrayWithAnEmptyTag(){
+        final String originalXml = "<root><id/></root>";
+        final String expectedJsonString = "{\"root\":{\"id\":[\"\"]}}";
+
+        HashSet<String> forceListCandidates = new HashSet<>();
+        forceListCandidates.add("id");
+        JSONObject json = XML.toJSONObject(originalXml,
+                new XMLParserConfiguration()
+                        .withForceList(forceListCandidates));
         assertEquals(expectedJsonString, json.toString());
     }
 

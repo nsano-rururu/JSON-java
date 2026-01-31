@@ -393,6 +393,11 @@ public class XML {
                             context.append(tagName, jsonObject);
                         } else if(context.isEmpty()) { //avoids resetting the array in case of an empty tag in the middle or end
                             context.put(tagName, new JSONArray());
+                            if (jsonObject.isEmpty()){
+                                context.append(tagName, "");
+                            }
+                        } else {
+                            context.append(tagName, "");
                         }
                     } else {
                         if (nilAttributeFound) {
@@ -455,6 +460,7 @@ public class XML {
                                         if(context.isEmpty()) {
                                             context.put(tagName, new JSONArray());
                                         }
+                                        context.append(tagName, "");
                                     } else if (jsonObject.length() == 1
                                             && jsonObject.opt(config.getcDataTagName()) != null) {
                                         context.append(tagName, jsonObject.opt(config.getcDataTagName()));
