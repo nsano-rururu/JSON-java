@@ -3349,7 +3349,7 @@ public class JSONObject {
      * of the given class. It supports basic data types including {@code int}, {@code double},
      * {@code float}, {@code long}, and {@code boolean}, as well as their boxed counterparts.
      * The target class must have a no-argument constructor, and its field names must match
-     * the keys in the JSON string.
+     * the keys in the JSON string. Static fields are ignored.
      *
      * <p><strong>Note:</strong> Only classes that are explicitly supported and registered within
      * the {@code JSONObject} context can be deserialized. If the provided class is not among those,
@@ -3366,6 +3366,9 @@ public class JSONObject {
         try {
             T obj = clazz.getDeclaredConstructor().newInstance();
             for (Field field : clazz.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
                 field.setAccessible(true);
                 String fieldName = field.getName();
                 if (has(fieldName)) {

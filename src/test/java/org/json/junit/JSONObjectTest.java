@@ -66,6 +66,7 @@ import org.json.junit.data.CustomClassF;
 import org.json.junit.data.CustomClassG;
 import org.json.junit.data.CustomClassH;
 import org.json.junit.data.CustomClassI;
+import org.json.junit.data.CustomClassJ;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Ignore;
@@ -4231,5 +4232,22 @@ public class JSONObjectTest {
         CustomClassI customClassI = object.fromJson(CustomClassI.class);
         CustomClassI compareClassI = new CustomClassI(dataList);
         assertEquals(customClassI.integerMap.toString(), compareClassI.integerMap.toString());
+    }
+
+    @Test
+    public void jsonObjectParseFromJson_9() {
+        JSONObject object = new JSONObject();
+        object.put("number", 12);
+        object.put("classState", "mutated");
+
+        String initialClassState = CustomClassJ.classState;
+        CustomClassJ.classState = "original";
+        try {
+            CustomClassJ customClassJ = object.fromJson(CustomClassJ.class);
+            assertEquals(12, customClassJ.number);
+            assertEquals("original", CustomClassJ.classState);
+        } finally {
+            CustomClassJ.classState = initialClassState;
+        }
     }
 }
